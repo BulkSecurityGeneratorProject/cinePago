@@ -38,6 +38,11 @@ public class CacheConfiguration {
             cm.createCache(ar.edu.um.programacion2.cinepago.domain.User.class.getName(), jcacheConfiguration);
             cm.createCache(ar.edu.um.programacion2.cinepago.domain.Authority.class.getName(), jcacheConfiguration);
             cm.createCache(ar.edu.um.programacion2.cinepago.domain.User.class.getName() + ".authorities", jcacheConfiguration);
+            cm.createCache(ar.edu.um.programacion2.cinepago.domain.Cliente.class.getName(), jcacheConfiguration);
+            cm.createCache(ar.edu.um.programacion2.cinepago.domain.Cliente.class.getName() + ".tarjetas", jcacheConfiguration);
+            cm.createCache(ar.edu.um.programacion2.cinepago.domain.Tarjeta.class.getName(), jcacheConfiguration);
+            cm.createCache(ar.edu.um.programacion2.cinepago.domain.Tarjeta.class.getName() + ".pagos", jcacheConfiguration);
+            cm.createCache(ar.edu.um.programacion2.cinepago.domain.Pago.class.getName(), jcacheConfiguration);
             // jhipster-needle-ehcache-add-entry
         };
     }
