@@ -1,6 +1,33 @@
 package ar.edu.um.programacion2.cinepago.web.rest;
 
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.codahale.metrics.annotation.Timed;
+
 import ar.edu.um.programacion2.cinepago.domain.Pago;
 import ar.edu.um.programacion2.cinepago.domain.Tarjeta;
 import ar.edu.um.programacion2.cinepago.repository.PagoRepository;
@@ -9,23 +36,6 @@ import ar.edu.um.programacion2.cinepago.web.rest.errors.BadRequestAlertException
 import ar.edu.um.programacion2.cinepago.web.rest.util.HeaderUtil;
 import ar.edu.um.programacion2.cinepago.web.rest.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * REST controller for managing Pago.
@@ -86,6 +96,43 @@ public class PagoResource {
             .body(result);
     }
 
+    /**
+     * POST  /pagos/{num_tarjeta}/{importe} : Crea un nuevo pago en una tarjeta de credito con un saldo en particular.
+     *
+     * @param pago the pago to create
+     * @return the String with status 200 and with body the new pago, or with status 501 if the pago has already an ID
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PostMapping("/pagos/{num_tarjeta}/{importe}")
+    @Timed
+    public String createPagoTarjeta(@PathVariable String num_tarjeta,@PathVariable BigDecimal importe) throws URISyntaxException {
+        log.debug("REST request to save Pago : {}");
+
+        if( tarjetaRepository.findByNumero(num_tarjeta) == null ) {
+            throw new UnsupportedOperationException("No existe tarjeta");
+        }
+        
+        Tarjeta tarjeta = tarjetaRepository.findByNumero(num_tarjeta);
+        
+        if(tarjeta.getSaldo().compareTo(importe) == -1)  {
+            throw new UnsupportedOperationException("Saldo Insuficiente");
+        }
+        
+        Pago pago=new Pago();
+        pago.setImporte(importe);
+        pago.setTarjeta(tarjeta);
+        pago.setCreated(ZonedDateTime.now());
+        pago.setUpdated(ZonedDateTime.now());
+        pago.setPagoUuid(UUID.randomUUID().toString());
+        pagoRepository.save(pago);
+        
+        tarjeta.setSaldo(tarjeta.getSaldo().subtract(pago.getImporte()));
+
+        tarjetaRepository.save(tarjeta);
+        return pago.getPagoUuid();
+ 
+    }
+    
     /**
      * PUT  /pagos : Updates an existing pago.
      *
