@@ -109,13 +109,13 @@ public class PagoResource {
         log.debug("REST request to save Pago : {}");
 
         if( tarjetaRepository.findByNumero(num_tarjeta) == null ) {
-            throw new UnsupportedOperationException("No existe tarjeta");
+            throw new BadRequestAlertException("No existe tarjeta", ENTITY_NAME, "num_tarjeta");
         }
         
         Tarjeta tarjeta = tarjetaRepository.findByNumero(num_tarjeta);
         
         if(tarjeta.getSaldo().compareTo(importe) == -1)  {
-            throw new UnsupportedOperationException("Saldo Insuficiente");
+            throw new BadRequestAlertException("Saldo Insuficiente", ENTITY_NAME, "saldo");
         }
         
         Pago pago=new Pago();
